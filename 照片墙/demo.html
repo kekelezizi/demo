@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>原生js实现照片墙</title>
+	<meta charset="utf-8">
+
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+
+		body{
+			background-color: #7b7b7b;
+		}
+
+		.wrapper{
+			width: 70%;
+			/*height: 100px;*/
+			/*border: 1px solid #000;*/
+			margin: 50px auto;
+			/*transition: all 1s linear;*/
+		}	
+
+		img{
+			width: 50px;
+			height:50px;
+			float: left;
+			/* transform: scale(1) */
+		}
+
+		.box{
+			width: 500px;
+			height: 252px;
+			margin: 50px auto;
+			/*border: 1px solid #000;*/
+			perspective: 700px;
+		}
+
+		.wrapper .btn{
+			cursor: pointer;
+			width: 100px;
+			height: 50px;
+			margin: 10px auto;
+			background-color: #0fc;
+			line-height: 50px;
+			font-size: 16px;
+			text-align: center;
+			color: #6c6c6c;
+			padding: 5px 5px;
+			box-shadow: 2px 2px 2px #eee;
+			font-weight: bolder;
+		}
+
+	</style>
+</head>
+<body>
+
+	<div class="wrapper">
+		<!-- <img src="./pic/0.jpg"> -->
+		<div class="box"></div>
+		<div class="btn">点击查看效果</div>
+	</div>
+
+	<script type="text/javascript">
+
+		// 生成图片结构 img插入图片
+		// bindEvent   --> 3步
+
+		var len,img;
+		var flag = true;
+		function init(){
+			createDom();
+		}
+
+		init();
+
+		// 生成图片结构
+		function createDom(){
+			for(var i = 0; i < 50; i++){
+				var imgBox = document.getElementsByClassName('box')[0];
+				var dom = document.createElement('img');
+				var num = Math.floor(Math.random() * 10);
+				dom.setAttribute('src',"./pic/" + num + ".jpg");
+				imgBox.appendChild(dom);
+			}
+			bindEvent();
+		}
+		// 步骤
+		// 1.所有图片都缩小scale设置动画（scale 0）随机延迟缩小消失
+		// 2.缩小后再放大在透明scale设置（scale 1）+ opacity（0）
+		// 3.所有图片转一圈 rotateY（360deg）
+		function bindEvent(){
+			
+			var btn = document.getElementsByClassName('btn')[0];
+			img = document.getElementsByTagName('img');
+			len = img.length;
+			btn.addEventListener('click',function(){
+				if (!flag) {
+					return;
+				}
+				flag = false;
+				var endNum = 0;
+				for(var i = 0; i < len; i++){
+					// 此处形成了闭包
+					(function(i){
+						setTimeout(function(){
+							// 执行动画
+							momition(img[i], '1s', function(){
+								// 第一个运动缩小
+								this.style.transform = 'scale(0)';
+							}, function(){
+								console.log(111);
+								momition(this, '1s', function(){
+									// 每一张图片缩小后  回调函数 放大回到原位置
+									this.style.transform = 'scale(1)';
+									this.style.opacity = 0;
+								}, function(){
+									// 记录所有图片完成个数
+									endNum++;
+									if(endNum == len){
+										show();
+									}
+								});
+							} );
+						},Math.random() * 1000);
+					}(i));	
+				}
+			});
+		}
+
+		// 回调函数：工具类的动画函数  dom 动画的类型 动画执行的时间  cb
+
+		function momition(dom, time, doFun, cb ){
+			dom.style.transition = time;
+			doFun.call(dom);
+			var called = true;
+			dom.addEventListener('transitionend',function(){
+				if (called == true) {
+					cb && cb.call(dom);
+					called = false;
+				}
+			});
+		}
+
+		function show(){
+			var allend = 0;
+			for(var i = 0; i < len; i++){
+				img[i].style.transition = '';
+				img[i].style.transform = 'rotateY(0) translateZ(-' + Math.random() * 500 + 'px)';
+				(function(i){
+					setTimeout(function(){
+						momition(img[i], '2s', function(){
+							this.style.opacity = 1;
+							this.style.transform = 'rotateY(360deg) translateZ(0)';
+						},function(){
+							allend++;
+							if(allend == len){
+								flag =true;
+							}
+						});
+					}, Math.random() * 1000);
+				}(i))
+			}
+		}
+
+	</script>
+</body>
+</html>
